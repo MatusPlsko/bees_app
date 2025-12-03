@@ -1,16 +1,26 @@
+import BeeMap from "../components/BeeMap";
+import { useNavigate } from "react-router-dom";
+
+
 export default function HomePage() {
+    const navigate = useNavigate();
+
   return (
     <div className="w-full flex flex-col items-center">
 
       {/* Title */}
-      <h1 className="text-2xl font-bold mt-6 mb-4">Map of monitored bee hives</h1>
+      <h1 className="text-2xl font-bold mt-6 mb-4">
+        Map of monitored bee hives
+      </h1>
 
-      {/* MAP PLACEHOLDER */}
-      <div className="w-full max-w-3xl h-72 bg-gray-300 rounded shadow mb-3">
-        {/* sem neskôr pôjde Mapa */}
-      </div>
+      {/* Mapbox mapa */}
+      <BeeMap />
 
-      <button className="text-yellow-600 font-semibold underline mb-8">
+      {/* Link to list */}
+      <button
+        className="text-yellow-600 font-semibold underline mb-8 mt-4"
+        onClick={() => navigate("/hives")}
+      >
         Show list of monitored bee hives
       </button>
 
@@ -32,10 +42,6 @@ export default function HomePage() {
         About us
       </div>
 
-      {/* Footer */}
-      <footer className="w-full bg-yellow-400 text-center py-4 font-semibold">
-        @ Matus Plsko 2025
-      </footer>
     </div>
   );
 }

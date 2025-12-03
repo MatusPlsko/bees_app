@@ -23,19 +23,22 @@ export default function SidebarMenu({
         <h2 className="text-xl font-semibold mb-6">Menu</h2>
 
         <nav className="flex flex-col gap-4">
-          <Link to="/" onClick={onClose} className="text-lg hover:underline">
-            Home
-          </Link>
-          <Link to="/login" onClick={onClose} className="text-lg hover:underline">
-            Log in
-          </Link>
-          <Link to="/about" onClick={onClose} className="text-lg hover:underline">
-            About us
-          </Link>
-          <a href="http://147.175.150.184/" className="text-lg hover:underline">
-            vcelicky.tk
-          </a>
+            <Link to="/" onClick={onClose} className="text-lg hover:underline">
+                Home
+            </Link>
+            <Link to="/hives" onClick={onClose} className="text-lg hover:underline">
+                Bee hives list
+            </Link>
+            <Link to="/login" onClick={onClose} className="text-lg hover:underline">
+                Log in
+            </Link>
+            <Link to="/about" onClick={onClose}>About us
+            </Link>
+            <a href="http://147.175.150.184/" className="text-lg hover:underline">
+                vcelicky.tk
+            </a>
         </nav>
+
       </div>
     </div>
   );

@@ -1,4 +1,5 @@
 import { teamMembers } from "../data/team";
+import { Linkedin } from "lucide-react";
 
 export default function AboutPage() {
   return (
@@ -33,16 +34,33 @@ export default function AboutPage() {
             {/* Text section */}
             <div className="p-4 flex flex-col grow">
               <h2 className="text-xl font-semibold mb-1">{member.name}</h2>
-              <p className="text-gray-700 mb-3">{member.role}</p>
+
+              <p className="text-gray-700 mb-1">{member.role}</p>
+
+              {/* Years */}
+              <p className="text-gray-500 italic mb-3">{member.years}</p>
 
               <p className="text-gray-600 mb-3">{member.email}</p>
 
-              {/* LinkedIn placeholder */}
+              {/* LinkedIn */}
               <div className="mt-auto">
-                <div className="inline-block px-2 py-1 bg-blue-200 rounded cursor-pointer opacity-40">
-                  <span className="text-blue-700 font-bold">in</span>
-                </div>
+                {member.linkedin ? (
+                  <a
+                    href={member.linkedin}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition"
+                  >
+                    <Linkedin size={18} />
+                    <span className="font-medium">LinkedIn</span>
+                  </a>
+                ) : (
+                  <div className="inline-block px-2 py-1 bg-blue-200 rounded opacity-40 cursor-not-allowed">
+                    <span className="text-blue-700 font-bold">in</span>
+                  </div>
+                )}
               </div>
+
             </div>
           </div>
         ))}

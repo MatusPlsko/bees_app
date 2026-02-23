@@ -74,10 +74,10 @@ const BeeMap = () => {
   }, []);
 
   return (
-    <div className="w-full max-w-4xl h-[400px] rounded-lg overflow-hidden shadow mb-4">
-      <div ref={mapContainerRef} className="w-full h-full" />
-    </div>
-  );
+  <div className="relative z-0 w-full max-w-4xl h-[400px] rounded-lg overflow-hidden shadow mb-4">
+    <div ref={mapContainerRef} className="w-full h-full" />
+  </div>
+);
 };
 
 export default BeeMap;

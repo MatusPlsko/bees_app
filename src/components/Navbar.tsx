@@ -1,17 +1,22 @@
-import { Link } from "react-router-dom";
-import { useState } from "react";
 import SidebarMenu from "./SidebarMenu";
 
-export default function Navbar() {
-  const [open, setOpen] = useState(false);
+type NavbarProps = {
+  open: boolean;
+  onOpen: () => void;
+  onClose: () => void;
+};
 
+export default function Navbar({ open, onOpen, onClose }: NavbarProps) {
   return (
     <>
       {/* NAVBAR */}
       <nav className="w-full bg-yellow-400 px-4 py-3 flex items-center justify-between shadow">
-        
         {/* Hamburger */}
-        <button onClick={() => setOpen(true)} className="flex flex-col gap-1">
+        <button
+          onClick={onOpen}
+          className="flex flex-col gap-1"
+          aria-label="Open menu"
+        >
           <span className="block w-6 h-[3px] bg-black"></span>
           <span className="block w-6 h-[3px] bg-black"></span>
           <span className="block w-6 h-[3px] bg-black"></span>
@@ -19,18 +24,28 @@ export default function Navbar() {
 
         {/* Center title */}
         <div className="text-xl font-bold text-black text-center flex-1">
-          <a href="http://147.175.150.184/" className="hover:opacity-70">vcelicky.tk</a>
-          {" "}
-          @
-          {" "}
-          <a href="https://www.fiit.stuba.sk/" className="hover:opacity-70">FIIT STU</a>
+          <a
+            href="http://147.175.150.184/"
+            className="hover:opacity-70"
+            onClick={onClose}
+          >
+            vcelicky.tk
+          </a>{" "}
+          @{" "}
+          <a
+            href="https://www.fiit.stuba.sk/"
+            className="hover:opacity-70"
+            onClick={onClose}
+          >
+            FIIT STU
+          </a>
         </div>
 
-        {/* Right side empty for now */}
+        {/* Right side spacer */}
         <div className="w-6"></div>
       </nav>
 
-      <SidebarMenu open={open} onClose={() => setOpen(false)} />
+      <SidebarMenu open={open} onClose={onClose} />
     </>
   );
 }

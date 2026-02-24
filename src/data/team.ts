@@ -1,3 +1,12 @@
+export type TeamMember = {
+  name: string;
+  role: string;
+  email: string;
+  image: string;
+  years: string;
+  linkedin: string;
+};
+
 export const teamMembers: TeamMember[] = [
   {
     name: "Adam Grík",
@@ -5,7 +14,7 @@ export const teamMembers: TeamMember[] = [
     email: "adam4grik@gmail.com",
     image: "/team/grik.jpg",
     years: "2023 – 2024",
-    linkedin: "https://www.linkedin.com/in/adam-gr%C3%ADk-32b2692a6/", 
+    linkedin: "https://www.linkedin.com/in/adam-gr%C3%ADk-32b2692a6/",
   },
   {
     name: "Ing. Tomáš Kováčik, PhD.",
@@ -13,7 +22,7 @@ export const teamMembers: TeamMember[] = [
     email: "tokosk16@gmail.com",
     image: "/team/kovacik.jpg",
     years: "2023 – present",
-    linkedin: "https://www.linkedin.com", 
+    linkedin: "https://www.linkedin.com",
   },
   {
     name: "Marek Vatrt",
@@ -21,7 +30,7 @@ export const teamMembers: TeamMember[] = [
     email: "vatrt@mail",
     image: "/team/user_pic.jpg",
     years: "2024 – 2025",
-    linkedin: "https://www.linkedin.com", 
+    linkedin: "https://www.linkedin.com",
   },
   {
     name: "Matúš Plško",
@@ -37,6 +46,6 @@ export const teamMembers: TeamMember[] = [
     email: "miso42850@gmail.com",
     image: "/team/kacinec.jpeg",
     years: "2025 – 2026",
-    linkedin: "https://www.linkedin.com/in/michal-kacinec-68162739a/", 
+    linkedin: "https://www.linkedin.com/in/michal-kacinec-68162739a/",
   },
 ];

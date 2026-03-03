@@ -2,21 +2,21 @@ import BeeMap from "../components/BeeMap";
 import { useNavigate } from "react-router-dom";
 
 
-export default function HomePage() {
-    const navigate = useNavigate();
+type HomePageProps = {
+  sidebarOpen?: boolean;
+};
+
+export default function HomePage({ sidebarOpen = false }: HomePageProps) {
+  const navigate = useNavigate();
 
   return (
     <div className="w-full flex flex-col items-center">
-
-      {/* Title */}
       <h1 className="text-2xl font-bold mt-6 mb-4">
         Map of monitored bee hives
       </h1>
 
-      {/* Mapbox mapa */}
-      <BeeMap />
+      <BeeMap disabled={sidebarOpen} />
 
-      {/* Link to list */}
       <button
         className="text-yellow-600 font-semibold underline mb-8 mt-4"
         onClick={() => navigate("/hives")}

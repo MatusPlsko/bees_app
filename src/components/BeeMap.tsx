@@ -3,12 +3,16 @@ import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { hivesGeoJson } from "../data/hivesGeoJson";
 
-// TODO: neskôr presunieme do .env
 const MAPBOX_TOKEN =
   "pk.eyJ1Ijoic3RhbmtvNDQiLCJhIjoiY2xzYzdsaHh6MG1nczJsbzV0MmFubWtnNyJ9.99PKedbw80WXMSkew8pA5g";
 
-const BeeMap = () => {
+type BeeMapProps = {
+  disabled?: boolean; // true keď je sidebar otvorený
+};
+
+const BeeMap = ({ disabled = false }: BeeMapProps) => {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
+  const mapRef = useRef<mapboxgl.Map | null>(null);
 
   useEffect(() => {
     if (!mapContainerRef.current) return;
@@ -22,11 +26,11 @@ const BeeMap = () => {
       zoom: 6,
     });
 
+    mapRef.current = map;
+
     map.on("load", () => {
-      // použijeme reálne GeoJSON dáta s úľmi
       map.addSource("places", {
         type: "geojson",
-        // cast na any, aby TS nefrflal na typ "FeatureCollection"
         data: hivesGeoJson as any,
       });
 
@@ -40,44 +44,51 @@ const BeeMap = () => {
           "icon-size": 2,
         },
       });
-
-      map.on("click", "places", (e) => {
-        if (!e.features || !e.features[0]) return;
-
-        const feature = e.features[0];
-        const coordinates = (feature.geometry as any).coordinates.slice();
-        const description = feature.properties?.description as string;
-
-        while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
-          coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
-        }
-
-        new mapboxgl.Popup()
-          .setLngLat(coordinates as [number, number])
-          .setHTML(description)
-          .addTo(map);
-      });
-
-      map.on("mouseenter", "places", () => {
-        map.getCanvas().style.cursor = "pointer";
-      });
-
-      map.on("mouseleave", "places", () => {
-        map.getCanvas().style.cursor = "";
-      });
     });
 
-    // cleanup pri unmountnutí komponentu
     return () => {
       map.remove();
+      mapRef.current = null;
     };
   }, []);
 
+  // ✅ toto je to hlavné: toggle interakcií + pointer-events na canvas
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    const canvas = map.getCanvas();
+    canvas.style.pointerEvents = disabled ? "none" : "auto";
+
+    if (disabled) {
+      map.boxZoom.disable();
+      map.doubleClickZoom.disable();
+      map.dragPan.disable();
+      map.dragRotate.disable();
+      map.keyboard.disable();
+      map.scrollZoom.disable();
+      map.touchZoomRotate.disable();
+    } else {
+      map.boxZoom.enable();
+      map.doubleClickZoom.enable();
+      map.dragPan.enable();
+      map.dragRotate.enable();
+      map.keyboard.enable();
+      map.scrollZoom.enable();
+      map.touchZoomRotate.enable();
+    }
+  }, [disabled]);
+
   return (
-  <div className="relative z-0 w-full max-w-4xl h-[400px] rounded-lg overflow-hidden shadow mb-4">
-    <div ref={mapContainerRef} className="w-full h-full" />
-  </div>
-);
+    <div className="relative w-full max-w-4xl h-[400px] rounded-lg overflow-hidden shadow mb-4">
+      <div ref={mapContainerRef} className="w-full h-full" />
+
+      {/* voliteľné: vizuálne stmavenie mapy */}
+      {disabled && (
+        <div className="absolute inset-0 bg-black/40 z-10 pointer-events-none" />
+      )}
+    </div>
+  );
 };
 
 export default BeeMap;

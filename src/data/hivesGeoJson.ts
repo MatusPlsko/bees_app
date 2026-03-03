@@ -4,6 +4,7 @@ export const hivesGeoJson = {
     {
       "type": "Feature",
       "properties": {
+        hiveId: "lucenec",
         "description": "<strong>Lu\u010Denec<\/strong><p><strong>Owner (beekeeper): <\/strong>User User<p><p><a href=\"http:\/\/147.175.150.184:8080\/dashboard\/83efda40-7e5c-11ef-9d7f-23b4ec4c1ac8?publicId=2be94650-894d-11ef-9d7f-23b4ec4c1ac8\" target=\"_blank\" title=\"Go to dashboard\">Display dashboard<\/a><\/p>",
         "icon": "embassy"
       },
@@ -15,6 +16,7 @@ export const hivesGeoJson = {
     {
       "type": "Feature",
       "properties": {
+        hiveId: "bratislava",
         "description": "<strong>Bratislava<\/strong><p><strong>Owner (beekeeper): <\/strong>User User<p><p><a href=\"http:\/\/147.175.150.184:8080\/dashboard\/9f9b2290-7e5c-11ef-9d7f-23b4ec4c1ac8?publicId=2be94650-894d-11ef-9d7f-23b4ec4c1ac8\" target=\"_blank\" title=\"Go to dashboard\">Display dashboard<\/a><\/p>",
         "icon": "embassy"
       },
@@ -26,6 +28,7 @@ export const hivesGeoJson = {
     {
       "type": "Feature",
       "properties": {
+        hiveId: "arduino-mega",
         "description": "<strong>Arduino MEGA 2560<\/strong><p><strong>Owner (beekeeper): <\/strong>User User<p><p><a href=\"http:\/\/147.175.150.184:8080\/dashboard\/65dae4f0-7e5c-11ef-9d7f-23b4ec4c1ac8?publicId=2be94650-894d-11ef-9d7f-23b4ec4c1ac8\" target=\"_blank\" title=\"Go to dashboard\">Display dashboard<\/a><\/p>",
         "icon": "embassy"
       },
@@ -37,6 +40,7 @@ export const hivesGeoJson = {
     {
       "type": "Feature",
       "properties": {
+        hiveId: "kosice",
         "description": "<strong>Ko\u0161ice<\/strong><p><strong>Owner (beekeeper): <\/strong>User User<p><p><a href=\"http:\/\/147.175.150.184:8080\/dashboard\/734075b0-7e5c-11ef-9d7f-23b4ec4c1ac8?publicId=2be94650-894d-11ef-9d7f-23b4ec4c1ac8\" target=\"_blank\" title=\"Go to dashboard\">Display dashboard<\/a><\/p>",
         "icon": "embassy"
       },
@@ -48,6 +52,7 @@ export const hivesGeoJson = {
     {
       "type": "Feature",
       "properties": {
+        hiveId: "poprad",
         "description": "<strong>Poprad<\/strong><p><strong>Owner (beekeeper): <\/strong>User User<p><p><a href=\"http:\/\/147.175.150.184:8080\/dashboard\/a8cc5870-7e5c-11ef-9d7f-23b4ec4c1ac8?publicId=2be94650-894d-11ef-9d7f-23b4ec4c1ac8\" target=\"_blank\" title=\"Go to dashboard\">Display dashboard<\/a><\/p>",
         "icon": "embassy"
       },
@@ -59,6 +64,7 @@ export const hivesGeoJson = {
     {
       "type": "Feature",
       "properties": {
+        hiveId: "banska-bystrica",
         "description": "<strong>Bansk\u00E1 Bystrica<\/strong><p><strong>Owner (beekeeper): <\/strong>User User<p><p><a href=\"http:\/\/147.175.150.184:8080\/dashboard\/954f06d0-7e5c-11ef-9d7f-23b4ec4c1ac8?publicId=2be94650-894d-11ef-9d7f-23b4ec4c1ac8\" target=\"_blank\" title=\"Go to dashboard\">Display dashboard<\/a><\/p>",
         "icon": "embassy"
       },

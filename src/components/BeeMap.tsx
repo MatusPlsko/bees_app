@@ -91,8 +91,7 @@ export default function BeeMap({ disabled = false }: BeeMapProps) {
           )
           .addTo(map);
 
-        const wxEl = popup.getElement().querySelector("#wx") as HTMLElement | null;
-        if (!wxEl) return;
+        const wxEl = popup.getElement()?.querySelector("#wx") as HTMLElement | null;        if (!wxEl) return;
 
         const renderWeather = (j: WeatherResp) => {
           const temp = j.tempC == null ? "?" : `${Math.round(j.tempC)}°C`;

@@ -7,12 +7,28 @@ const MAPBOX_TOKEN =
   "pk.eyJ1Ijoic3RhbmtvNDQiLCJhIjoiY2xzYzdsaHh6MG1nczJsbzV0MmFubWtnNyJ9.99PKedbw80WXMSkew8pA5g";
 
 type BeeMapProps = {
-  disabled?: boolean; // true keď je sidebar otvorený
+  disabled?: boolean;
 };
+
+type WeatherResp = {
+  location: string;
+  tempC: number | null;
+  humidity: number | null;
+  windMs: number | null;
+  description: string | null;
+  icon: string | null;
+  cached: boolean;
+  remainingToday: number;
+};
+
+type CacheItem = { ts: number; data: WeatherResp };
+const WX_TTL_MS = 10 * 60 * 1000; // 10 min (zlaď s backend cache)
 
 export default function BeeMap({ disabled = false }: BeeMapProps) {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
+
+  const weatherCacheRef = useRef<Map<string, CacheItem>>(new Map());
 
   useEffect(() => {
     if (!mapContainerRef.current) return;
@@ -28,79 +44,112 @@ export default function BeeMap({ disabled = false }: BeeMapProps) {
 
     mapRef.current = map;
 
-    const onLoad = () => {
-      // SOURCE
-      if (!map.getSource("places")) {
-        map.addSource("places", {
-          type: "geojson",
-          data: hivesGeoJson as any,
-        });
-      }
-
-      // LAYER
-      if (!map.getLayer("places")) {
-        map.addLayer({
-          id: "places",
-          type: "symbol",
-          source: "places",
-          layout: {
-            "icon-image": ["get", "icon"],
-            "icon-allow-overlap": true,
-            "icon-size": 2,
-          },
-        });
-      }
-
-      // CLICK -> show popup (like on the web)
-      map.on("click", "places", (e) => {
-        const feature = e.features?.[0];
-        if (!feature) return;
-
-        const coords = (feature.geometry as any).coordinates?.slice();
-        if (!coords) return;
-
-        const description = (feature.properties as any)?.description as string | undefined;
-        if (!description) return;
-
-        // handle world wrap (Mapbox recommended snippet)
-        while (Math.abs(e.lngLat.lng - coords[0]) > 180) {
-          coords[0] += e.lngLat.lng > coords[0] ? 360 : -360;
-        }
-
-        new mapboxgl.Popup({ offset: 10 })
-          .setLngLat(coords as [number, number])
-          .setHTML(description)
-          .addTo(map);
+    map.on("load", () => {
+      map.addSource("places", {
+        type: "geojson",
+        data: hivesGeoJson as any,
       });
 
-      // Cursor pointer on hover
+      map.addLayer({
+        id: "places",
+        type: "symbol",
+        source: "places",
+        layout: {
+          "icon-image": ["get", "icon"],
+          "icon-allow-overlap": true,
+          "icon-size": 2,
+        },
+      });
+
       map.on("mouseenter", "places", () => {
         map.getCanvas().style.cursor = "pointer";
       });
-
       map.on("mouseleave", "places", () => {
         map.getCanvas().style.cursor = "";
       });
-    };
 
-    map.on("load", onLoad);
+      map.on("click", "places", async (e) => {
+        if (!e.features?.[0]) return;
+
+        const feature = e.features[0] as any;
+        const coordinates = feature.geometry.coordinates.slice() as [number, number]; // [lon, lat]
+        const descriptionHtml = String(feature.properties?.description ?? "");
+        const hiveId = String(feature.properties?.hiveId ?? "");
+
+        while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+          coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+        }
+
+        const popup = new mapboxgl.Popup({ closeButton: true })
+          .setLngLat(coordinates)
+          .setHTML(
+            `${descriptionHtml}
+             <div style="margin-top:10px; font-weight:700;">Weather:</div>
+             <div id="wx" style="display:flex; align-items:center; gap:10px; margin-top:6px;">
+               <span>Loading...</span>
+             </div>`
+          )
+          .addTo(map);
+
+        const wxEl = popup.getElement().querySelector("#wx") as HTMLElement | null;
+        if (!wxEl) return;
+
+        const renderWeather = (j: WeatherResp) => {
+          const temp = j.tempC == null ? "?" : `${Math.round(j.tempC)}°C`;
+          const desc = j.description ?? "";
+
+          const iconHtml = j.icon
+            ? `<img src="https://openweathermap.org/img/wn/${j.icon}@2x.png" width="44" height="44" alt="${desc}"/>`
+            : "";
+
+          wxEl.innerHTML = `
+            ${iconHtml}
+            <div>
+              <div style="font-weight:800;">${temp}</div>
+              <div style="font-size:12px; opacity:.8;">${desc}</div>
+            </div>
+          `;
+        };
+
+        if (hiveId) {
+          const cached = weatherCacheRef.current.get(hiveId);
+          if (cached && Date.now() - cached.ts < WX_TTL_MS) {
+            renderWeather(cached.data);
+            return;
+          }
+        }
+
+        try {
+          const base = import.meta.env.DEV ? "/bees/" : import.meta.env.BASE_URL;
+          const url = `${base}api/weather?lat=${encodeURIComponent(
+            String(coordinates[1])
+          )}&lon=${encodeURIComponent(String(coordinates[0]))}`;
+
+          const r = await fetch(url);
+          const j = (await r.json()) as WeatherResp;
+
+          if (!r.ok) {
+            wxEl.innerHTML = `<span style="color:#b00020;">Weather unavailable</span>`;
+            return;
+          }
+
+          if (hiveId) {
+            weatherCacheRef.current.set(hiveId, { ts: Date.now(), data: j });
+          }
+
+          renderWeather(j);
+        } catch {
+          wxEl.innerHTML = `<span style="color:#b00020;">Weather unavailable</span>`;
+        }
+      });
+    });
 
     return () => {
-      // Cleanup
-      try {
-        map.off("load", onLoad);
-        map.off("click", "places", () => {});
-        map.off("mouseenter", "places", () => {});
-        map.off("mouseleave", "places", () => {});
-      } catch {
-        // ignore
-      }
       map.remove();
       mapRef.current = null;
     };
   }, []);
 
-  // disable/enable interactions when sidebar open
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;

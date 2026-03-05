@@ -22,13 +22,17 @@ type WeatherResp = {
 };
 
 type CacheItem = { ts: number; data: WeatherResp };
-const WX_TTL_MS = 10 * 60 * 1000; // 10 min (zlaď s backend cache)
+const WX_TTL_MS = 10 * 60 * 1000; // 10 min
 
 export default function BeeMap({ disabled = false }: BeeMapProps) {
   const mapContainerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
 
+  // cache medzi klikmi / rendermi
   const weatherCacheRef = useRef<Map<string, CacheItem>>(new Map());
+
+  // aby sme vedeli clean-up markerov
+  const weatherMarkersRef = useRef<mapboxgl.Marker[]>([]);
 
   useEffect(() => {
     if (!mapContainerRef.current) return;
@@ -44,7 +48,75 @@ export default function BeeMap({ disabled = false }: BeeMapProps) {
 
     mapRef.current = map;
 
+    // helper: fetch weather s cache
+    async function getWeatherCached(
+      hiveId: string,
+      lat: number,
+      lon: number
+    ): Promise<WeatherResp | null> {
+      const cached = weatherCacheRef.current.get(hiveId);
+      if (cached && Date.now() - cached.ts < WX_TTL_MS) return cached.data;
+
+      try {
+        const base = import.meta.env.DEV ? "/bees/" : import.meta.env.BASE_URL;
+        const url = `${base}api/weather?lat=${encodeURIComponent(
+          String(lat)
+        )}&lon=${encodeURIComponent(String(lon))}`;
+
+        const r = await fetch(url);
+        const j = (await r.json()) as WeatherResp;
+
+        if (!r.ok) return null;
+
+        weatherCacheRef.current.set(hiveId, { ts: Date.now(), data: j });
+        return j;
+      } catch {
+        return null;
+      }
+    }
+
+    // helper: vytvor “badge” marker
+    function createWeatherBadgeEl() {
+      const el = document.createElement("div");
+
+      // malé “pill” nad úľom
+      el.style.display = "flex";
+      el.style.alignItems = "center";
+      el.style.gap = "6px";
+      el.style.padding = "4px 8px";
+      el.style.border = "1px solid #000";
+      el.style.borderRadius = "999px";
+      el.style.background = "rgba(243,244,246,0.95)"; // gray-100-ish
+      el.style.boxShadow = "0 2px 6px rgba(0,0,0,0.15)";
+      el.style.fontWeight = "800";
+      el.style.fontSize = "12px";
+      el.style.lineHeight = "1";
+      el.style.pointerEvents = "none"; // aby badge neblokoval klik na vlajku
+
+      // placeholder
+      el.textContent = "…";
+      return el;
+    }
+
+    // helper: update badge
+    function renderBadge(el: HTMLElement, w: WeatherResp | null) {
+      if (!w) {
+        el.textContent = "N/A";
+        return;
+      }
+
+      const temp = w.tempC == null ? "?" : `${Math.round(w.tempC)}°`;
+
+      // vyrobíme malý HTML obsah (ikonka + teplota)
+      const iconHtml = w.icon
+        ? `<img src="https://openweathermap.org/img/wn/${w.icon}@2x.png" width="26" height="26" style="display:block; margin:-6px 0;" alt="" />`
+        : "";
+
+      el.innerHTML = `${iconHtml}<span>${temp}</span>`;
+    }
+
     map.on("load", () => {
+      // ====== HIVE LAYER ======
       map.addSource("places", {
         type: "geojson",
         data: hivesGeoJson as any,
@@ -61,6 +133,39 @@ export default function BeeMap({ disabled = false }: BeeMapProps) {
         },
       });
 
+      // ====== WEATHER BADGES (nad každým úľom) ======
+      // clean-up starých markerov, keby sa to niekedy reloadlo
+      weatherMarkersRef.current.forEach((m) => m.remove());
+      weatherMarkersRef.current = [];
+
+      const features = (hivesGeoJson as any)?.features ?? [];
+      for (const f of features) {
+        const hiveId = String(f?.properties?.hiveId ?? "");
+        const coords = f?.geometry?.coordinates as [number, number] | undefined; // [lon, lat]
+        if (!hiveId || !coords) continue;
+
+        const [lon, lat] = coords;
+
+        const badgeEl = createWeatherBadgeEl();
+        const marker = new mapboxgl.Marker({
+          element: badgeEl,
+          // posunieme to nad vlajku
+          offset: [0, -32],
+          anchor: "bottom",
+        })
+          .setLngLat([lon, lat])
+          .addTo(map);
+
+        weatherMarkersRef.current.push(marker);
+
+        // fetch weather a update badge
+        void (async () => {
+          const w = await getWeatherCached(hiveId, lat, lon);
+          renderBadge(badgeEl, w);
+        })();
+      }
+
+      // ====== CURSOR ======
       map.on("mouseenter", "places", () => {
         map.getCanvas().style.cursor = "pointer";
       });
@@ -68,6 +173,7 @@ export default function BeeMap({ disabled = false }: BeeMapProps) {
         map.getCanvas().style.cursor = "";
       });
 
+      // ====== POPUP (klik) + weather (s cache) ======
       map.on("click", "places", async (e) => {
         if (!e.features?.[0]) return;
 
@@ -91,16 +197,20 @@ export default function BeeMap({ disabled = false }: BeeMapProps) {
           )
           .addTo(map);
 
-        const wxEl = popup.getElement()?.querySelector("#wx") as HTMLElement | null;        if (!wxEl) return;
+        const wxEl =
+          (popup.getElement()?.querySelector("#wx") as HTMLElement | null) ?? null;
+        if (!wxEl) return;
 
-        const renderWeather = (j: WeatherResp) => {
+        const renderPopupWeather = (j: WeatherResp | null) => {
+          if (!j) {
+            wxEl.innerHTML = `<span style="color:#b00020;">Weather unavailable</span>`;
+            return;
+          }
           const temp = j.tempC == null ? "?" : `${Math.round(j.tempC)}°C`;
           const desc = j.description ?? "";
-
           const iconHtml = j.icon
             ? `<img src="https://openweathermap.org/img/wn/${j.icon}@2x.png" width="44" height="44" alt="${desc}"/>`
             : "";
-
           wxEl.innerHTML = `
             ${iconHtml}
             <div>
@@ -110,45 +220,25 @@ export default function BeeMap({ disabled = false }: BeeMapProps) {
           `;
         };
 
-        if (hiveId) {
-          const cached = weatherCacheRef.current.get(hiveId);
-          if (cached && Date.now() - cached.ts < WX_TTL_MS) {
-            renderWeather(cached.data);
-            return;
-          }
-        }
+        const [lon, lat] = coordinates;
 
-        try {
-          const base = import.meta.env.DEV ? "/bees/" : import.meta.env.BASE_URL;
-          const url = `${base}api/weather?lat=${encodeURIComponent(
-            String(coordinates[1])
-          )}&lon=${encodeURIComponent(String(coordinates[0]))}`;
-
-          const r = await fetch(url);
-          const j = (await r.json()) as WeatherResp;
-
-          if (!r.ok) {
-            wxEl.innerHTML = `<span style="color:#b00020;">Weather unavailable</span>`;
-            return;
-          }
-
-          if (hiveId) {
-            weatherCacheRef.current.set(hiveId, { ts: Date.now(), data: j });
-          }
-
-          renderWeather(j);
-        } catch {
-          wxEl.innerHTML = `<span style="color:#b00020;">Weather unavailable</span>`;
-        }
+        // použijeme cache (a zároveň doplníme badge cache)
+        const w = await getWeatherCached(hiveId || `${lat},${lon}`, lat, lon);
+        renderPopupWeather(w);
       });
     });
 
     return () => {
+      // cleanup markerov
+      weatherMarkersRef.current.forEach((m) => m.remove());
+      weatherMarkersRef.current = [];
+
       map.remove();
       mapRef.current = null;
     };
   }, []);
 
+  // sidebar disable interactions
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
@@ -178,7 +268,6 @@ export default function BeeMap({ disabled = false }: BeeMapProps) {
   return (
     <div className="relative w-full max-w-4xl h-[400px] rounded-lg overflow-hidden shadow mb-4">
       <div ref={mapContainerRef} className="w-full h-full" />
-
       {disabled && (
         <div className="absolute inset-0 bg-black/40 z-10 pointer-events-none" />
       )}

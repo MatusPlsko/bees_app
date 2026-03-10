@@ -1,3 +1,5 @@
+const base = import.meta.env.BASE_URL;
+
 export type TeamMember = {
   name: string;
   role: string;
@@ -12,7 +14,7 @@ export const teamMembers: TeamMember[] = [
     name: "Adam Grík",
     role: "Student (Software developer)",
     email: "adam4grik@gmail.com",
-    image: "/team/grik.jpg",
+    image: `${base}team/grik.jpg`,
     years: "2023 – 2024",
     linkedin: "https://www.linkedin.com/in/adam-gr%C3%ADk-32b2692a6/",
   },
@@ -20,7 +22,7 @@ export const teamMembers: TeamMember[] = [
     name: "Ing. Tomáš Kováčik, PhD.",
     role: "Teacher (Supervisor)",
     email: "tokosk16@gmail.com",
-    image: "/team/kovacik.jpg",
+    image: `${base}team/kovacik.jpg`,
     years: "2023 – present",
     linkedin: "https://www.linkedin.com",
   },
@@ -28,7 +30,7 @@ export const teamMembers: TeamMember[] = [
     name: "Marek Vatrt",
     role: "Student (Software developer)",
     email: "vatrt@mail",
-    image: "/team/user_pic.jpg",
+    image: `${base}team/user_pic.jpg`,
     years: "2024 – 2025",
     linkedin: "https://www.linkedin.com",
   },
@@ -36,7 +38,7 @@ export const teamMembers: TeamMember[] = [
     name: "Matúš Plško",
     role: "Student (Software developer)",
     email: "matusplsko10@gmail.com",
-    image: "/team/plsko.jpg",
+    image: `${base}team/plsko.jpg`,
     years: "2025 – 2026",
     linkedin: "https://www.linkedin.com/in/mat%C3%BA%C5%A1-pl%C5%A1ko-582048359",
   },
@@ -44,7 +46,7 @@ export const teamMembers: TeamMember[] = [
     name: "Michal Kačinec",
     role: "Student (Hardware developer)",
     email: "miso42850@gmail.com",
-    image: "/team/kacinec.jpeg",
+    image: `${base}team/kacinec.jpeg`,
     years: "2025 – 2026",
     linkedin: "https://www.linkedin.com/in/michal-kacinec-68162739a/",
   },

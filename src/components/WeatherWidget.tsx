@@ -59,7 +59,7 @@ export default function WeatherWidget({ hiveId }: Props) {
   if (!hive) {
     return (
       <div className="w-full max-w-2xl bg-gray-200 border border-black rounded-lg shadow p-4">
-        <div className="font-extrabold text-lg">Weather</div>
+        <div className="font-extrabold text-lg">Actual Weather</div>
         <div className="mt-2 text-red-600 font-bold">Unknown hive</div>
       </div>
     );

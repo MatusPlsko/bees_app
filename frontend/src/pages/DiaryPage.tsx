@@ -30,8 +30,7 @@ function formatLine(dt: Date) {
   return { day, time };
 }
 
-// URL backendu
-const API_URL = "http://127.0.0.1:8000"; // uprav podľa tvojho backendu
+const API_URL = "";
 
 export default function DiaryPage() {
   const [searchParams] = useSearchParams();

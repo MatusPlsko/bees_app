@@ -6,7 +6,6 @@ import AboutPage from "./pages/AboutPage";
 import HivesListPage from "./pages/HivesListPage";
 import DiaryPage from "./pages/DiaryPage";
 import Footer from "./components/Footer";
-import LoginPage from "./pages/LoginPage";
 import ThingsBoardPage from "./pages/ThingsBoardPage";
 
 function App() {

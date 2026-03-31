@@ -1,14 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { hives } from "../data/hives";
-import {
-  addDiaryEntry,
-  deleteDiaryEntry,
-  getLastDiaryHiveId,
-  loadDiary,
-  setLastDiaryHiveId,
-  type DiaryEntry,
-} from "../utils/diaryStorage";
+import axios from "axios";
+import { hives, type Hive } from "../data/hives";
 
 const ACTIONS = [
   "Kŕmenie úľov",
@@ -17,6 +10,14 @@ const ACTIONS = [
   "Kontrola úľa",
   "Iné",
 ] as const;
+
+export type DiaryEntry = {
+  id: string;
+  hive_id: string;   
+  action_type: string; 
+  note: string;
+  created_at: string;
+};
 
 function formatLine(dt: Date) {
   const day = new Intl.DateTimeFormat("en-US", { weekday: "short" })
@@ -29,10 +30,13 @@ function formatLine(dt: Date) {
   return { day, time };
 }
 
+// URL backendu
+const API_URL = "http://127.0.0.1:8000"; // uprav podľa tvojho backendu
+
 export default function DiaryPage() {
   const [searchParams] = useSearchParams();
-  const hiveFromUrl = searchParams.get("hiveId"); // z HivesListPage
-  const lastHive = getLastDiaryHiveId();
+  const hiveFromUrl = searchParams.get("hiveId");
+  const lastHive = localStorage.getItem("lastDiaryHiveId");
 
   const initialHiveId =
     hiveFromUrl ||
@@ -41,53 +45,71 @@ export default function DiaryPage() {
     "";
 
   const [selectedHiveId, setSelectedHiveId] = useState(initialHiveId);
-
   const [action, setAction] = useState<string>("");
   const [customAction, setCustomAction] = useState("");
   const [note, setNote] = useState("");
-
   const [entries, setEntries] = useState<DiaryEntry[]>([]);
 
-  // keď sa zmení hive, načítaj z localStorage + ulož ako last selected
-  useEffect(() => {
-    if (!selectedHiveId) return;
-    setEntries(loadDiary(selectedHiveId));
-    setLastDiaryHiveId(selectedHiveId);
-  }, [selectedHiveId]);
-
-  const selectedHive = useMemo(
+  const selectedHive: Hive | undefined = useMemo(
     () => hives.find((h) => h.id === selectedHiveId),
     [selectedHiveId]
   );
 
   const resolvedAction = action === "Iné" ? customAction.trim() : action;
 
-  function onSubmit(e: React.FormEvent) {
+  // --- Načítanie poznámok z backendu ---
+  useEffect(() => {
+    if (!selectedHiveId) return;
+
+    localStorage.setItem("lastDiaryHiveId", selectedHiveId);
+
+    axios
+      .get<DiaryEntry[]>(`${API_URL}/diary/${selectedHiveId}`)
+      .then((res) => setEntries(res.data))
+      .catch((err) =>
+        console.error("Chyba pri načítaní poznámok:", err)
+      );
+  }, [selectedHiveId]);
+
+  // --- Uloženie novej poznámky ---
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedHiveId) return;
-
     if (!action) return alert("Vyber akciu.");
-    if (action === "Iné" && !customAction.trim())
-      return alert("Zadaj custom action.");
+    if (action === "Iné" && !customAction.trim()) return alert("Zadaj custom action.");
     if (!note.trim()) return alert("Zadaj poznámku.");
 
-    const updated = addDiaryEntry(selectedHiveId, {
-      hiveId: selectedHiveId,
-      actionType: resolvedAction,
-      note: note.trim(),
-    });
+    try {
+      // POST na backend so správnym názvom pola: action_type
+      const res = await axios.post<DiaryEntry>(`${API_URL}/diary/`, {
+        hive_id: selectedHiveId,
+        action_type: resolvedAction,  // <- presne takto, aby sa nezobrazil "-"
+        note: note.trim(),
+      });
 
-    setEntries(updated);
-    setAction("");
-    setCustomAction("");
-    setNote("");
-  }
+      // pridanie novej poznámky do state
+      setEntries((prev) => [...prev, res.data]);
 
-  function onDelete(entryId: string) {
-    if (!selectedHiveId) return;
-    const updated = deleteDiaryEntry(selectedHiveId, entryId);
-    setEntries(updated);
-  }
+      // reset formu
+      setAction("");
+      setCustomAction("");
+      setNote("");
+    } catch (err) {
+      console.error("Chyba pri uložení poznámky:", err);
+      alert("Nepodarilo sa uložiť poznámku.");
+    }
+  };
+
+  // --- Mazanie poznámky ---
+  const onDelete = async (entryId: string) => {
+    try {
+      await axios.delete(`${API_URL}/diary/${entryId}`);
+      setEntries((prev) => prev.filter((e) => e.id !== entryId));
+    } catch (err) {
+      console.error("Chyba pri mazani poznámky:", err);
+      alert("Nepodarilo sa vymazať poznámku.");
+    }
+  };
 
   return (
     <div className="w-full">
@@ -205,7 +227,7 @@ export default function DiaryPage() {
           ) : (
             <div className="space-y-3">
               {entries.map((e) => {
-                const dt = new Date(e.createdAt);
+                const dt = new Date(e.created_at);
                 const { day, time } = formatLine(dt);
                 return (
                   <div
@@ -216,7 +238,7 @@ export default function DiaryPage() {
                       <span className="w-10">{day}</span>
                       <span className="w-14">{time}</span>
                       <span className="hidden sm:inline">-</span>
-                      <span className="font-bold">{e.actionType}</span>
+                      <span className="font-bold">{e.action_type}</span> {/* ← tu je zmena */}
                     </div>
 
                     <div className="sm:ml-auto flex items-center gap-3">

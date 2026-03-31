@@ -28,8 +28,8 @@ export default function SidebarMenu({
           <Link to="/hives" onClick={onClose} className="text-lg hover:underline">
             Bee hives list
           </Link>
-          <Link to="/login" onClick={onClose} className="text-lg hover:underline">
-            Log in
+          <Link to="/thingsboard" onClick={onClose} className="text-lg hover:underline">
+            ThingsBoard
           </Link>
           <Link to="/diary" onClick={onClose} className="text-lg hover:underline">
             Diary

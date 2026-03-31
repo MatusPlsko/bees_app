@@ -7,6 +7,7 @@ import HivesListPage from "./pages/HivesListPage";
 import DiaryPage from "./pages/DiaryPage";
 import Footer from "./components/Footer";
 import LoginPage from "./pages/LoginPage";
+import ThingsBoardPage from "./pages/ThingsBoardPage";
 
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -27,7 +28,8 @@ function App() {
           />
           <Route path="/diary" element={<DiaryPage />} />
           <Route path="/hives" element={<HivesListPage />} />
-          <Route path="/login" element={<LoginPage />} />
+          <Route path="/thingsboard" element={<ThingsBoardPage />} />
+
           <Route path="/about" element={<AboutPage />} />
         </Routes>
       </main>

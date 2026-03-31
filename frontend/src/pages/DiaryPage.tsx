@@ -30,7 +30,7 @@ function formatLine(dt: Date) {
   return { day, time };
 }
 
-const API_URL = "";
+const API_URL = "/bees/api";
 
 export default function DiaryPage() {
   const [searchParams] = useSearchParams();

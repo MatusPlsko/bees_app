@@ -3,10 +3,10 @@ import { useState } from "react";
 import Navbar from "./components/Navbar";
 import HomePage from "./pages/HomePage";
 import AboutPage from "./pages/AboutPage";
-import HivesListPage from "./pages/HivesListPage";
 import DiaryPage from "./pages/DiaryPage";
 import Footer from "./components/Footer";
 import ThingsBoardPage from "./pages/ThingsBoardPage";
+import DashboardsPage from "./pages/DashboardsPage"; 
 
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -23,12 +23,10 @@ function App() {
         <Routes>
           <Route
             path="/"
-            element={<HomePage sidebarOpen={sidebarOpen} />}
-          />
+            element={<HomePage sidebarOpen={sidebarOpen} />}/>
           <Route path="/diary" element={<DiaryPage />} />
-          <Route path="/hives" element={<HivesListPage />} />
           <Route path="/thingsboard" element={<ThingsBoardPage />} />
-
+          <Route path="/dashboards" element={<DashboardsPage />} />
           <Route path="/about" element={<AboutPage />} />
         </Routes>
       </main>
